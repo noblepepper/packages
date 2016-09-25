@@ -23,8 +23,8 @@ endif
 
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
-# TODO: figure out why we use the toolchain patches when
-# 	we have our own patch directory. We need some of
+# TODO: figure out a better way to the toolchain patches when
+# 	we have our own patch directory and need some of
 # 	our own anyway (see Build/Prepare section below)
 PATCH_DIR:=$(TOPDIR)/toolchain/gcc/patches/$(PKG_VERSION)
 PKG_INSTALL:=1
