@@ -50,7 +50,7 @@ define Package/gcc
   SECTION:=devel
   CATEGORY:=Development
   TITLE:=gcc
-  MAINTAINER:=Christian Beier <cb@shoutrlabs.com>
+  MAINTAINER:=Noble Pepper <gccmaintain@noblepepper.com>
   DEPENDS:= +binutils +libstdcpp
 endef
 
