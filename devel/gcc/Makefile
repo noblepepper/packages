@@ -4,29 +4,15 @@
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
 #
-# Build same version as toolchain 5.3.0 (OpenWrt Trunk Sept 23 1016), or 5.4.0 (Lede Sept 23 2016)
 
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=gcc
-PKG_VERSION:=$(GCC_VERSION)
+PKG_VERSION:=5.4.0
 PKG_RELEASE:=1
 PKG_SOURCE_URL:=@GNU/gcc/gcc-$(PKG_VERSION)
-
-ifeq ($(PKG_VERSION),5.3.0)
-  PKG_MD5SUM:=c9616fd448f980259c31de613e575719
-endif
-
-ifeq ($(PKG_VERSION),5.4.0)
-  PKG_MD5SUM:=4c626ac2a83ef30dfb9260e6f59c2b30
-endif
-
-
+PKG_MD5SUM:=4c626ac2a83ef30dfb9260e6f59c2b30
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
-# TODO: figure out a better way to the toolchain patches when
-# 	we have our own patch directory and need some of
-# 	our own anyway (see Build/Prepare section below)
-PATCH_DIR:=$(TOPDIR)/toolchain/gcc/patches/$(PKG_VERSION)
 PKG_INSTALL:=1
 PKG_FIXUP:=libtool
 PKG_BUILD_PARALLEL:=1
@@ -95,11 +81,6 @@ define Build/Prepare
 	tar -C $(PKG_BUILD_DIR) -xvjf $(DL_DIR)/$(MPFRSRC).tar.bz2
 	ln -sf $(PKG_BUILD_DIR)/$(MPFRSRC) $(PKG_BUILD_DIR)/mpfr
 	$(Build/Patch)
-# See todo above, we need these even after the toolchain patches
-	patch -p1 -d "$(PKG_BUILD_DIR)" < ./patches/002-dont-choke-when-building-32bit-on-64bit.patch
-	patch -p1 -d "$(PKG_BUILD_DIR)" < ./patches/003-mpfr-longlong-mips.patch
-	patch -p1 -d "$(PKG_BUILD_DIR)" < ./patches/930-osdefines.patch
-
 #	poor man's fix for `none-openwrt-linux' not recognized when building with musl
 	cp $(PKG_BUILD_DIR)/config.sub $(PKG_BUILD_DIR)/mpfr/
 	cp $(PKG_BUILD_DIR)/config.sub $(PKG_BUILD_DIR)/gmp/
@@ -174,6 +155,7 @@ define Package/gcc/install
 	cp -ar $(TOOLCHAIN_DIR)/include $(1)/usr
 	cp -a $(TOOLCHAIN_DIR)/lib/*.{o,so*} $(1)/usr/lib/$(PKG_NAME)/$(REAL_GNU_TARGET_NAME)/$(PKG_VERSION)
 	cp -a $(TOOLCHAIN_DIR)/lib/*nonshared*.a  $(1)/usr/lib/$(PKG_NAME)/$(REAL_GNU_TARGET_NAME)/$(PKG_VERSION)
+	cp -a $(TOOLCHAIN_DIR)/lib/libm.a  $(1)/usr/lib/$(PKG_NAME)/$(REAL_GNU_TARGET_NAME)/$(PKG_VERSION)
 	rm -f $(1)/usr/lib/$(PKG_NAME)/$(REAL_GNU_TARGET_NAME)/$(PKG_VERSION)/libgo*
 	rm -f $(1)/usr/lib/$(PKG_NAME)/$(REAL_GNU_TARGET_NAME)/$(PKG_VERSION)/libcc1*
 	echo '#!/bin/sh' > $(1)/usr/bin/gcc_env.sh
