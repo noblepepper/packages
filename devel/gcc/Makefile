@@ -124,7 +124,6 @@ define Build/Configure
 			--with-host-libstdcxx=-lstdc++ \
 			--prefix=/usr \
 			--libexecdir=/usr/lib \
-			--with-local-prefix=/usr \
 			$(ARM_FLOAT_OPTION) \
 			$(SOFT_FLOAT_CONFIG_OPTION) \
 			$(call qstrip,$(CONFIG_EXTRA_GCC_CONFIG_OPTIONS)) \
