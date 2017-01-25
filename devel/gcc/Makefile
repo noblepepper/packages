@@ -31,6 +31,11 @@ RSTRIP:= \
 	STRIP_KMOD="$(STRIP) --strip-debug" \
 	$(SCRIPT_DIR)/rstrip.sh
 
+ifneq ($(CONFIG_SOFT_FLOAT),y)
+	ifeq ($(CONFIG_arm),y)
+		ARM_FLOAT_OPTION:= --with-float=hard
+	endif
+endif
 
 define Package/gcc
   SECTION:=devel
@@ -120,6 +125,7 @@ define Build/Configure
 			--prefix=/usr \
 			--libexecdir=/usr/lib \
 			--with-local-prefix=/usr \
+			$(ARM_FLOAT_OPTION) \
 			$(SOFT_FLOAT_CONFIG_OPTION) \
 			$(call qstrip,$(CONFIG_EXTRA_GCC_CONFIG_OPTIONS)) \
 	);
