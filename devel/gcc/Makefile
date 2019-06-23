@@ -6,19 +6,51 @@
 #
 
 include $(TOPDIR)/rules.mk
+define Package/gcc/description
+	build a native toolchain for compiling on target
+endef
+
+
+define Package/gcc
+  SECTION:=devel
+  CATEGORY:=Development
+  TITLE:=gcc
+  MAINTAINER:=Noble Pepper <gccmaintain@noblepepper.com>
+  DEPENDS:= +binutils +libstdcpp
+  MENU:=1
+endef
 
 PKG_NAME:=gcc
-PKG_VERSION:=5.4.0
-PKG_RELEASE:=3
+PKG_VERSION=7.3.0
+# PKG_VERSION=7.4.0 
+PKG_RELEASE:=4
 PKG_SOURCE_URL:=@GNU/gcc/gcc-$(PKG_VERSION)
-PKG_HASH:=608df76dec2d34de6558249d8af4cbee21eceddbcb580d666f7a5a583ca3303a
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_INSTALL:=1
 PKG_FIXUP:=libtool
 PKG_BUILD_PARALLEL:=1
 
-include $(INCLUDE_DIR)/package.mk
+ifeq ($(PKG_VERSION),7.3.0)
+	PKG_HASH:=832ca6ae04636adbb430e865a1451adf6979ab44ca1c8374f61fba65645ce15c
+endif
+ifeq ($(PKG_VERSION),7.4.0)
+	PKG_HASH:=eddde28d04f334aec1604456e536416549e9b1aa137fc69204e65eb0c009fe51
+endif
 
+
+define Package/gcc/config
+  source "$(SOURCE)/Config.in"
+endef
+
+ifeq ($(CONFIG_INCLUDE_STATIC_LIBC),y)
+	COPY_STATIC_LIBC=cp -a $(TOOLCHAIN_DIR)/lib/libc.a $(1)/usr/lib/$(PKG_NAME)/$(REAL_GNU_TARGET_NAME)/$(PKG_VERSION)
+endif
+
+ifeq ($(CONFIG_INCLUDE_STATIC_LIBPTHREAD),y)
+	COPY_STATIC_LIBPTHREAD=cp -a $(TOOLCHAIN_DIR)/lib/libpthread.a $(1)/usr/lib/$(PKG_NAME)/$(REAL_GNU_TARGET_NAME)/$(PKG_VERSION)
+endif
+
+include $(INCLUDE_DIR)/package.mk
 TARGET_LANGUAGES:="c,c++"
 BUGURL=https://dev.openwrt.org/
 PKGVERSION=OpenWrt GCC $(PKG_VERSION)
@@ -37,43 +69,30 @@ ifneq ($(CONFIG_SOFT_FLOAT),y)
 		ARM_FLOAT_OPTION:= --with-float=hard
 	endif
 endif
-
-define Package/gcc
-  SECTION:=devel
-  CATEGORY:=Development
-  TITLE:=gcc
-  MAINTAINER:=Noble Pepper <gccmaintain@noblepepper.com>
-  DEPENDS:= +binutils +libstdcpp
-endef
-
-define Package/gcc/description
-	build a native toolchain for compiling on target
-endef
-
-GMPSRC=gmp-4.3.2
+GMPSRC=gmp-6.1.0
 
 define Download/gmp
   URL:=ftp://gcc.gnu.org/pub/gcc/infrastructure/
   FILE:=$(GMPSRC).tar.bz2
-  HASH:=936162c0312886c21581002b79932829aa048cfaf9937c6265aeaa14f1cd1775
+  HASH:=498449a994efeba527885c10405993427995d3f86b8768d8cdf8d9dd7c6b73e8
 endef
 $(eval $(call Download,gmp))
 
-MPCSRC=mpc-0.8.1
+MPCSRC=mpc-1.0.3
 
 define Download/mpc
   URL:=ftp://gcc.gnu.org/pub/gcc/infrastructure/
   FILE:=$(MPCSRC).tar.gz
-  HASH:=e664603757251fd8a352848276497a4c79b7f8b21fd8aedd5cc0598a38fee3e4
+  HASH:=617decc6ea09889fb08ede330917a00b16809b8db88c29c31bfbb49cbf88ecc3
 endef
 $(eval $(call Download,mpc))
 
-MPFRSRC=mpfr-2.4.2
+MPFRSRC=mpfr-3.1.4
 
 define Download/mpfr
   URL:=ftp://gcc.gnu.org/pub/gcc/infrastructure/
   FILE:=$(MPFRSRC).tar.bz2
-  HASH:=c7e75a08a8d49d2082e4caee1591a05d11b9d5627514e678f02d66a124bcf2ba
+  HASH:=d3103a80cdad2407ed581f3618c4bed04e0c92d1cf771a65ead662cc397f7775
 endef
 $(eval $(call Download,mpfr))
 
@@ -86,15 +105,18 @@ define Build/Prepare
 	ln -sf $(PKG_BUILD_DIR)/$(MPCSRC) $(PKG_BUILD_DIR)/mpc
 	tar -C $(PKG_BUILD_DIR) -xvjf $(DL_DIR)/$(MPFRSRC).tar.bz2
 	ln -sf $(PKG_BUILD_DIR)/$(MPFRSRC) $(PKG_BUILD_DIR)/mpfr
+#	use standard toolchain patches too
+	ln -sf $(TOPDIR)/toolchain/gcc/patches/$(GCC_VERSION)/* $(TOPDIR)/feeds/packages/devel/gcc/patches/
 	$(Build/Patch)
+	find $(TOPDIR)/feeds/packages/devel/gcc/patches/ -type l -delete
 #	poor man's fix for `none-openwrt-linux' not recognized when building with musl
 	cp $(PKG_BUILD_DIR)/config.sub $(PKG_BUILD_DIR)/mpfr/
 	cp $(PKG_BUILD_DIR)/config.sub $(PKG_BUILD_DIR)/gmp/
+	chmod u+w $(PKG_BUILD_DIR)/mpc/config.sub
 	cp $(PKG_BUILD_DIR)/config.sub $(PKG_BUILD_DIR)/mpc/
 endef
 
-TARGET_CXX += -std=gnu++03
-CONFIGURE_ARGS += CXX_FOR_TARGET="$(TARGET_CXX)" CXXFLAGS_FOR_TARGET="-g -O2 -D_GLIBCXX_INCLUDE_NEXT_C_HEADERS"
+CONFIGURE_ARGS +=  CXXFLAGS_FOR_TARGET="-g -O2 -D_GLIBCXX_INCLUDE_NEXT_C_HEADERS"
 
 define Build/Configure
 	(cd $(PKG_BUILD_DIR); rm -f config.cache; \
@@ -128,6 +150,7 @@ define Build/Configure
 			--prefix=/usr \
 			--libexecdir=/usr/lib \
 			--with-local-prefix=/usr \
+			--with-stage1-ldflags=-lstdc++ \
 			$(ARM_FLOAT_OPTION) \
 			$(SOFT_FLOAT_CONFIG_OPTION) \
 			$(call qstrip,$(CONFIG_EXTRA_GCC_CONFIG_OPTIONS)) \
@@ -149,7 +172,7 @@ ifeq ($(CONFIG_SOFT_FLOAT),y)
 endif
 ENVCFLAGS+="
 
-ENVLDFLAGS:="-Wl,-rpath=/usr/lib -Wl,--dynamic-linker=/usr/lib/$(DYNLINKER) -L/usr/lib"
+ENVLDFLAGS:="-Wl,-rpath=/usr/lib -Wl,--dynamic-linker=/usr/lib/$(DYNLINKER) -L/usr/lib, -lstdc++"
 
 define Package/gcc/install
 	$(INSTALL_DIR) $(1)/usr/bin $(1)/usr/lib $(1)/usr/lib/$(PKG_NAME)/$(REAL_GNU_TARGET_NAME)/$(PKG_VERSION)
@@ -165,6 +188,8 @@ define Package/gcc/install
 	cp -a $(TOOLCHAIN_DIR)/lib/*.{o,so*} $(1)/usr/lib/$(PKG_NAME)/$(REAL_GNU_TARGET_NAME)/$(PKG_VERSION)
 	cp -a $(TOOLCHAIN_DIR)/lib/*nonshared*.a  $(1)/usr/lib/$(PKG_NAME)/$(REAL_GNU_TARGET_NAME)/$(PKG_VERSION)
 	cp -a $(TOOLCHAIN_DIR)/lib/libm.a  $(1)/usr/lib/$(PKG_NAME)/$(REAL_GNU_TARGET_NAME)/$(PKG_VERSION)
+	$(COPY_STATIC_LIBC)
+	$(COPY_STATIC_LIBPTHREAD)
 	rm -f $(1)/usr/lib/$(PKG_NAME)/$(REAL_GNU_TARGET_NAME)/$(PKG_VERSION)/libgo*
 	rm -f $(1)/usr/lib/$(PKG_NAME)/$(REAL_GNU_TARGET_NAME)/$(PKG_VERSION)/libcc1*
 	echo '#!/bin/sh' > $(1)/usr/bin/gcc_env.sh

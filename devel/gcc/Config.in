@@ -1,0 +1,11 @@
+# gcc library configuration
+menu "Libraries"
+	depends on PACKAGE_gcc
+	config INCLUDE_STATIC_LIBC
+		bool "Include static libc on target"
+		default n
+	config INCLUDE_STATIC_LIBPTHREAD
+		bool "Include static libptread on target"
+		default n
+endmenu
+
