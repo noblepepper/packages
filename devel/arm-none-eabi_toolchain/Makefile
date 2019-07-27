@@ -13,17 +13,18 @@ define Package/gcc-arm-none-eabi
   SECTION:=devel/
   CATEGORY:=embeded
   TITLE:=Toolchain for arm mcus
+endef
 
 define Package/bridge/description
  Ethernet bridging configuration utility
   Manage ethernet bridging; a way to connect networks together to
    form a larger network.
-   endef
+endef
 
 define Build/Configure
-  endef
+endef
 
 define Package/bridge/install
-		endef
+endef
 
 $(eval $(call BuildPackage,bridge))
