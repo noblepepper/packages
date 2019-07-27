@@ -10,8 +10,8 @@ PKG_SOURCE_URL:=https://developer.arm.com/-/media/Files/downloads/gnu-rm/8-2019q
 PKG_HASH:=9b7dc52656f5cbec846a7ba3299f73bd
 
 define Package/gcc-arm-none-eabi
-  SECTION:=devel/
-  CATEGORY:=embeded
+  SECTION:=devel
+  CATEGORY:=Development
   TITLE:=Toolchain for arm mcus
 endef
 
