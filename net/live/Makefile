@@ -19,26 +19,26 @@ PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/openrtsp
+define Package/live
   SECTION:=video
   CATEGORY:=Video Streaming
   TITLE:=live555 streaming libraries and testProgs
   URL:=http://www.live555.com/
-  DEPENDS:=+libstdcpp
+  DEPENDS:=+libstdcpp +libopenssl
 endef
 
 define Build/Configure
 	( cd $(PKG_BUILD_DIR); \
 		$(SED) 's/@CROSS_COMPILE@/$(TARGET_CROSS)/g' \
-		    -e 's/@CFLAGS@/$(TARGET_CFLAGS)/g' \
+		    -e 's?@CFLAGS@?$(TARGET_CFLAGS)?g' \
 		    config.OpenWrt; \
 		./genMakefiles OpenWrt; \
 	)
 endef
 
-define Package/openrtsp/install
+define Package/live/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/testProgs/openRTSP $(1)/usr/bin/
 endef
 
-$(eval $(call BuildPackage,openrtsp))
+$(eval $(call BuildPackage,live))
