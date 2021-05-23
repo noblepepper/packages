@@ -22,28 +22,47 @@ define Package/gcc
 endef
 
 PKG_NAME:=gcc
-# PKG_VERSION=7.3.0
-PKG_VERSION=7.4.0
-PKG_RELEASE:=6
-PKG_SOURCE_URL:=@GNU/gcc/gcc-$(PKG_VERSION)
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
+PKG_RELEASE:=7
 PKG_INSTALL:=1
 PKG_FIXUP:=libtool
 PKG_BUILD_PARALLEL:=1
 
 PKG_CPE_ID:=cpe:/a:gnu:gcc
 
-ifeq ($(PKG_VERSION),7.3.0)
-	PKG_HASH:=832ca6ae04636adbb430e865a1451adf6979ab44ca1c8374f61fba65645ce15c
-endif
-ifeq ($(PKG_VERSION),7.4.0)
-	PKG_HASH:=eddde28d04f334aec1604456e536416549e9b1aa137fc69204e65eb0c009fe51
-endif
-
 
 define Package/gcc/config
   source "$(SOURCE)/Config.in"
 endef
+ifeq ($(CONFIG_GCC_7),y)
+  PKG_VERSION=7.5.0
+endif
+ifeq ($(CONFIG_GCC_8),y)
+  PKG_VERSION=8.4.0
+endif
+ifeq ($(CONFIG_GCC_9),y) 
+  PKG_VERSION=9.3.0
+endif
+ifeq ($(CONFIG_GCC_10),y)
+  PKG_VERSION=10.3.0
+endif
+
+ifeq ($(PKG_VERSION),7.5.0)
+  PKG_HASH:=b81946e7f01f90528a1f7352ab08cc602b9ccc05d4e44da4bd501c5a189ee661
+endif
+ifeq ($(PKG_VERSION),8.4.0)
+  PKG_HASH:=e30a6e52d10e1f27ed55104ad233c30bd1e99cfb5ff98ab022dc941edd1b2dd4
+endif
+ifeq ($(PKG_VERSION),9.3.0)
+  PKG_HASH:=71e197867611f6054aa1119b13a0c0abac12834765fe2d81f35ac57f84f742d1
+endif
+ifeq ($(PKG_VERSION),10.3.0)
+  PKG_HASH:=64f404c1a650f27fc33da242e1f2df54952e3963a49e06e73f6940f3223ac344
+endif
+
+PKG_SOURCE_URL:=@GNU/gcc/gcc-$(PKG_VERSION)
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
+
+PATCH_DIR=./patches/$(PKG_VERSION)
 
 ifeq ($(CONFIG_INCLUDE_STATIC_LIBC),y)
 	COPY_STATIC_LIBC=cp -a $(TOOLCHAIN_DIR)/lib/libc.a $(1)/usr/lib/$(PKG_NAME)/$(REAL_GNU_TARGET_NAME)/$(PKG_VERSION)
@@ -140,8 +159,7 @@ define Build/Configure
 			--with-bugurl=$(BUGURL) \
 			--with-pkgversion="$(PKGVERSION)" \
 			--enable-shared \
-			$(if $(CONFIG_LIBC_USE_GLIBC),--enable,--disable)-__cxa_atexit \
-			--with-default-libstdcxx-abi=gcc4-compatible \
+			--disable-__cxa_atexit \
 			--enable-target-optspace \
 			--with-gnu-ld \
 			--disable-nls \
@@ -156,11 +174,13 @@ define Build/Configure
 			--disable-libssp \
 			--disable-decimal-float \
 			--disable-libstdcxx-pch \
+			--disable-libstdc++-v3 \
 			--with-host-libstdcxx=-lstdc++ \
 			--prefix=/usr \
 			--libexecdir=/usr/lib \
 			--with-local-prefix=/usr \
 			--with-stage1-ldflags=-lstdc++ \
+			--with-specs='-I/usr/include/c++/$(GCC_VERSION)/$(REAL_GNU_TARGET_NAME) -I\/usr\/include\/c++\/$(GCC_VERSION)' \
 			$(ARM_FLOAT_OPTION) \
 			$(SOFT_FLOAT_CONFIG_OPTION) \
 			$(call qstrip,$(CONFIG_EXTRA_GCC_CONFIG_OPTIONS)) \
@@ -196,6 +216,8 @@ define Package/gcc/install
 	ln -s $(REAL_GNU_TARGET_NAME)-gcc $(1)/usr/bin/$(REAL_GNU_TARGET_NAME)-gcc-$(PKG_VERSION)
 	cp -ar $(PKG_INSTALL_DIR)/usr/lib/gcc $(1)/usr/lib
 	cp -ar $(TOOLCHAIN_DIR)/include $(1)/usr
+	cp -ar $(TOOLCHAIN_DIR)/$(REAL_GNU_TARGET_NAME)/include $(1)/usr
+	cp -ar $(TOOLCHAIN_DIR)/$(REAL_GNU_TARGET_NAME)/sys-include $(1)/usr
 	cp -a $(TOOLCHAIN_DIR)/lib/*.{o,so*} $(1)/usr/lib/$(PKG_NAME)/$(REAL_GNU_TARGET_NAME)/$(PKG_VERSION)
 	cp -a $(TOOLCHAIN_DIR)/lib/*nonshared*.a  $(1)/usr/lib/$(PKG_NAME)/$(REAL_GNU_TARGET_NAME)/$(PKG_VERSION)
 	cp -a $(TOOLCHAIN_DIR)/lib/libm.a  $(1)/usr/lib/$(PKG_NAME)/$(REAL_GNU_TARGET_NAME)/$(PKG_VERSION)
