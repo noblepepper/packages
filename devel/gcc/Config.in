@@ -1,5 +1,5 @@
-# gcc library configuration
 
+# gcc version configuration
 menu "Version"
 	depends on PACKAGE_gcc
 	choice
@@ -25,6 +25,7 @@ menu "Version"
 	endchoice
 endmenu
 
+# gcc library configuration
 menu "Libraries"
 	depends on PACKAGE_gcc
 	config INCLUDE_STATIC_LIBC
