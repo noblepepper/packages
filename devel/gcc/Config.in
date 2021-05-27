@@ -1,32 +1,30 @@
 # gcc library configuration
-#menu "Version"
-#	depends on PACKAGE_gcc
-choice
-prompt "Version"
+
+menu "Version"
 	depends on PACKAGE_gcc
-	default GCC__8
-	help
-	  Select the version of gcc you wish to use.
+	choice
+		prompt "GCC package compiler Version" 
+		default GCC_8
+		config GCC_10
+			bool "gcc version 10.x"
+			help
+				gcc version 10
+		config GCC_9 
+			bool "gcc version 9.x"
+			help
+				gcc version 9
+		config GCC_8 
+			bool "gcc version 8.x"
+			help
+				gcc version 8
+		config GCC_7
+			bool "gcc version 7.x"
+			help
+				gcc version 7
 
-	config GCC_10
-		bool "gcc version 10.x"
-		help
-			gcc version 10
-	config GCC_9 
-		bool "gcc version 9.x"
-		help
-			gcc version 9
-	config GCC_8 
-		bool "gcc version 8.x"
-		help
-			gcc version 8
-	config GCC_7
-		bool "gcc version 7.x"
-		help
-			gcc version 7
+	endchoice
+endmenu
 
-endchoice
-#endmenu
 menu "Libraries"
 	depends on PACKAGE_gcc
 	config INCLUDE_STATIC_LIBC
