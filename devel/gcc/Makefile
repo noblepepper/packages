@@ -180,7 +180,7 @@ define Build/Configure
 			--libexecdir=/usr/lib \
 			--with-local-prefix=/usr \
 			--with-stage1-ldflags=-lstdc++ \
-			--with-specs='-I/usr/include/c++/$(GCC_VERSION)/$(REAL_GNU_TARGET_NAME) -I\/usr\/include\/c++\/$(GCC_VERSION)' \ # point compiler to toolchain includes
+			--with-specs='-I/usr/include/c++/$(GCC_VERSION)/$(REAL_GNU_TARGET_NAME) -I\/usr\/include\/c++\/$(GCC_VERSION)' \
 			$(ARM_FLOAT_OPTION) \
 			$(SOFT_FLOAT_CONFIG_OPTION) \
 			$(call qstrip,$(CONFIG_EXTRA_GCC_CONFIG_OPTIONS)) \
