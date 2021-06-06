@@ -1,15 +1,16 @@
 
 # gcc version configuration
-menu "Version"
+choice
 	depends on PACKAGE_gcc
-	choice
 		prompt "GCC package compiler Version" 
 		default GCC_8
 		config GCC_10
+			depends on !arm || GCC_VERSION_10
 			bool "gcc version 10.x"
 			help
 				gcc version 10
 		config GCC_9 
+			depends on !arm || GCC_VERSION_9 || GCC_VERSION_10
 			bool "gcc version 9.x"
 			help
 				gcc version 9
@@ -22,13 +23,11 @@ menu "Version"
 			help
 				gcc version 7
 
-	endchoice
-endmenu
+endchoice
 
 # gcc library configuration
-menu "Libraries"
-	depends on PACKAGE_gcc
 	config INCLUDE_STATIC_LIBC
+	depends on PACKAGE_gcc
 		bool "Include static libc on target"
 		help
 			Copies libc.a to target device
@@ -36,6 +35,7 @@ menu "Libraries"
 			very large package
 		default n
 	config INCLUDE_STATIC_LIBPTHREAD
+	depends on PACKAGE_gcc
 		bool "Include static libptread on target"
 		help
 			Copies libpthread.a to target device
@@ -43,6 +43,7 @@ menu "Libraries"
 			very large package
 		default n
 	config INCLUDE_STATIC_LIBSTDC
+	depends on PACKAGE_gcc
 		bool "Include static libstdc++ on target"
 		help
 			Copies libstdc++.a to target device
@@ -50,6 +51,7 @@ menu "Libraries"
 			very large package
 		default n
 	config INCLUDE_STATIC_LINK_SPEC
+	depends on PACKAGE_gcc
 		depends on INCLUDE_STATIC_LIBSTDC
 		bool "Generate spec file for easy static c++ linking on target"
 		help
@@ -57,5 +59,3 @@ menu "Libraries"
 			-lstdc++, libgcc_pic and -static-libstdc flags when
 			statically linking c++ programs
 		default n
-endmenu
-
